@@ -1,0 +1,43 @@
+# https://github.com/awslabs/serverless-application-model/blob/develop/versions/2016-10-31.md
+# Indentation needs to be set with spaces, because YAML...
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: API endpoint to get an id from a BGS simulation sample
+
+Globals:
+    Api:
+        # API Gateway regional endpoints
+        EndpointConfiguration: EDGE
+        Cors:
+            AllowMethods: "'*'"
+            AllowHeaders: "'*'"
+            AllowOrigin: "'*'"
+
+Resources:
+    GetIdFromBgsSimulationSampleFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: bgs-get-id-from-sample.default
+            Runtime: nodejs10.x
+            Timeout: 180
+            MemorySize: 128
+            CodeUri: ./dist/bgs-get-id-from-sample
+            Policies:
+                - AWSLambdaVPCAccessExecutionRole
+                - AmazonSESFullAccess
+                - SecretsManagerReadWrite
+            Tags:
+                LambdaName: api-save-bgs-simulation-sample
+            Events:
+                GetMatchStatsResource:
+                    Type: Api
+                    Properties:
+                        Path: /{proxy+}
+                        Method: any
+
+Outputs:
+    GetIdFromBgsSimulationSampleApi:
+        Description: URL to get an id from a BGS simulation sample
+        Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
+        Export:
+            Name: GetIdFromBgsSimulationSampleApi
