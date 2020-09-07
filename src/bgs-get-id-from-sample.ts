@@ -8,8 +8,6 @@ import { encode } from './services/utils';
 export default async (event): Promise<any> => {
 	try {
 		// console.log('processing event', event);
-		const sample: any = event.body;
-		// console.log('sample is', sample);
 		const encoded = encode(event.body);
 
 		const mysqlBgs = await getConnectionBgs();
@@ -26,20 +24,26 @@ export default async (event): Promise<any> => {
 			// console.log('found existing sample, returning id', dbResults[0]);
 			return {
 				statusCode: 200,
-				body: JSON.stringify(dbResults[0]),
+				body: JSON.stringify(dbResults[0].id),
 			};
 		}
 
-		const insertionResult = await mysqlBgs.query(
+		const insertionResult: any = await mysqlBgs.query(
 			`
 				INSERT INTO bgs_simulation_samples (sample)
 				VALUES ('${encoded}')
 			`,
 		);
-		// console.log('inserted', insertionResult);
+		console.log('inserted', insertionResult);
+		// const insertedData = await mysqlBgs.query(
+		// 	`
+		// 		SELECT id FROM bgs_simulation_samples
+		// 		WHERE sample = '${encoded}'
+		// 	`,
+		// );
 		const response = {
 			statusCode: 200,
-			body: JSON.stringify(insertionResult[0].id),
+			body: JSON.stringify(insertionResult.insertId),
 		};
 		// console.log('sending back success reponse');
 		return response;
