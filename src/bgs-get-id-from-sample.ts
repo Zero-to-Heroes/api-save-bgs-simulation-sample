@@ -6,8 +6,25 @@ import { encode } from './services/utils';
 // the more traditional callback-style handler.
 // [1]: https://aws.amazon.com/blogs/compute/node-js-8-10-runtime-now-available-in-aws-lambda/
 export default async (event): Promise<any> => {
+	const headers = {
+		'Access-Control-Allow-Headers':
+			'Accept,Accept-Language,Content-Language,Content-Type,Authorization,x-correlation-id,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+		'Access-Control-Expose-Headers': 'x-my-header-out',
+		'Access-Control-Allow-Methods': 'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT',
+		'Access-Control-Allow-Origin': event.headers.Origin || event.headers.origin,
+	};
 	try {
-		// console.log('processing event', event);
+		console.log('processing event', event);
+		// Preflight
+		if (!event.body) {
+			const response = {
+				statusCode: 200,
+				body: null,
+				headers: headers,
+			};
+			console.log('sending back success response without body', response);
+			return response;
+		}
 		const encoded = encode(event.body);
 
 		const mysqlBgs = await getConnectionBgs();
@@ -21,10 +38,11 @@ export default async (event): Promise<any> => {
 		);
 
 		if (dbResults && dbResults.length > 0) {
-			// console.log('found existing sample, returning id', dbResults[0]);
+			console.log('found existing sample, returning id');
 			return {
 				statusCode: 200,
 				body: JSON.stringify(dbResults[0].id),
+				headers: headers,
 			};
 		}
 
@@ -44,8 +62,9 @@ export default async (event): Promise<any> => {
 		const response = {
 			statusCode: 200,
 			body: JSON.stringify(insertionResult.insertId),
+			headers: headers,
 		};
-		// console.log('sending back success reponse');
+		console.log('sending back success reponse', response);
 		return response;
 	} catch (e) {
 		console.error('issue saving sample', e);
@@ -53,6 +72,7 @@ export default async (event): Promise<any> => {
 			statusCode: 500,
 			isBase64Encoded: false,
 			body: null,
+			headers: headers,
 		};
 		console.log('sending back error reponse', response);
 		return response;
