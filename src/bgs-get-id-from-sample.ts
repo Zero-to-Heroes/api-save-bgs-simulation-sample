@@ -53,6 +53,7 @@ export default async (event): Promise<any> => {
 			`,
 		);
 		console.log('inserted', insertionResult);
+		await mysqlBgs.end();
 		// const insertedData = await mysqlBgs.query(
 		// 	`
 		// 		SELECT id FROM bgs_simulation_samples
