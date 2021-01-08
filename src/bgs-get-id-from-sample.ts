@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
+import SqlString from 'sqlstring';
 import { getConnection as getConnectionBgs } from './services/rds-bgs';
 import { encode } from './services/utils';
 
@@ -27,13 +28,14 @@ export default async (event): Promise<any> => {
 		}
 		const encoded = encode(event.body);
 
+		const escape = SqlString.escape;
 		const mysqlBgs = await getConnectionBgs();
 
 		// Check if this sample already exists in db
 		const dbResults: any[] = await mysqlBgs.query(
 			`
 				SELECT id FROM bgs_simulation_samples
-				WHERE sample = '${encoded}'
+				WHERE sample = ${escape(encoded)}
 			`,
 		);
 
@@ -49,7 +51,7 @@ export default async (event): Promise<any> => {
 		const insertionResult: any = await mysqlBgs.query(
 			`
 				INSERT INTO bgs_simulation_samples (sample)
-				VALUES ('${encoded}')
+				VALUES (${escape(encoded)})
 			`,
 		);
 		console.log('inserted', insertionResult);
