@@ -14,70 +14,58 @@ export default async (event): Promise<any> => {
 		'Access-Control-Allow-Methods': 'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT',
 		'Access-Control-Allow-Origin': event.headers.Origin || event.headers.origin,
 	};
-	try {
-		console.log('processing event', event);
-		// Preflight
-		if (!event.body) {
-			const response = {
-				statusCode: 200,
-				body: null,
-				headers: headers,
-			};
-			console.log('sending back success response without body', response);
-			return response;
-		}
-		const encoded = encode(event.body);
-
-		const escape = SqlString.escape;
-		const mysqlBgs = await getConnectionBgs();
-
-		// Check if this sample already exists in db
-		const dbResults: any[] = await mysqlBgs.query(
-			`
-				SELECT id FROM bgs_simulation_samples
-				WHERE sample = ${escape(encoded)}
-			`,
-		);
-
-		if (dbResults && dbResults.length > 0) {
-			console.log('found existing sample, returning id');
-			return {
-				statusCode: 200,
-				body: JSON.stringify(dbResults[0].id),
-				headers: headers,
-			};
-		}
-
-		const insertionResult: any = await mysqlBgs.query(
-			`
-				INSERT INTO bgs_simulation_samples (sample)
-				VALUES (${escape(encoded)})
-			`,
-		);
-		console.log('inserted', insertionResult);
-		await mysqlBgs.end();
-		// const insertedData = await mysqlBgs.query(
-		// 	`
-		// 		SELECT id FROM bgs_simulation_samples
-		// 		WHERE sample = '${encoded}'
-		// 	`,
-		// );
+	console.log('processing event', event);
+	// Preflight
+	if (!event.body) {
 		const response = {
 			statusCode: 200,
-			body: JSON.stringify(insertionResult.insertId),
-			headers: headers,
-		};
-		console.log('sending back success reponse', response);
-		return response;
-	} catch (e) {
-		console.error('issue saving sample', e);
-		const response = {
-			statusCode: 500,
-			isBase64Encoded: false,
 			body: null,
 			headers: headers,
 		};
-		console.log('sending back error reponse', response);
+		console.log('sending back success response without body', response);
 		return response;
 	}
+	const encoded = encode(event.body);
+
+	const escape = SqlString.escape;
+	const mysqlBgs = await getConnectionBgs();
+
+	// Check if this sample already exists in db
+	const dbResults: any[] = await mysqlBgs.query(
+		`
+				SELECT id FROM bgs_simulation_samples
+				WHERE sample = ${escape(encoded)}
+			`,
+	);
+
+	if (dbResults && dbResults.length > 0) {
+		console.log('found existing sample, returning id');
+		return {
+			statusCode: 200,
+			body: JSON.stringify(dbResults[0].id),
+			headers: headers,
+		};
+	}
+
+	const insertionResult: any = await mysqlBgs.query(
+		`
+				INSERT INTO bgs_simulation_samples (sample)
+				VALUES (${escape(encoded)})
+			`,
+	);
+	console.log('inserted', insertionResult);
+	await mysqlBgs.end();
+	// const insertedData = await mysqlBgs.query(
+	// 	`
+	// 		SELECT id FROM bgs_simulation_samples
+	// 		WHERE sample = '${encoded}'
+	// 	`,
+	// );
+	const response = {
+		statusCode: 200,
+		body: JSON.stringify(insertionResult.insertId),
+		headers: headers,
+	};
+	console.log('sending back success reponse', response);
+	return response;
 };
