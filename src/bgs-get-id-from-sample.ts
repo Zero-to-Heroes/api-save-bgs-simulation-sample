@@ -14,7 +14,6 @@ export default async (event): Promise<any> => {
 		'Access-Control-Allow-Methods': 'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT',
 		'Access-Control-Allow-Origin': event.headers.Origin || event.headers.origin,
 	};
-	console.log('processing event', event);
 	// Preflight
 	if (!event.body) {
 		const response = {
@@ -22,7 +21,6 @@ export default async (event): Promise<any> => {
 			body: null,
 			headers: headers,
 		};
-		console.log('sending back success response without body', response);
 		return response;
 	}
 	const encoded = encode(event.body);
@@ -39,7 +37,6 @@ export default async (event): Promise<any> => {
 	);
 
 	if (dbResults && dbResults.length > 0) {
-		console.log('found existing sample, returning id');
 		return {
 			statusCode: 200,
 			body: JSON.stringify(dbResults[0].id),
@@ -53,7 +50,6 @@ export default async (event): Promise<any> => {
 				VALUES (${escape(encoded)})
 			`,
 	);
-	console.log('inserted', insertionResult);
 	await mysqlBgs.end();
 	// const insertedData = await mysqlBgs.query(
 	// 	`
@@ -66,6 +62,5 @@ export default async (event): Promise<any> => {
 		body: JSON.stringify(insertionResult.insertId),
 		headers: headers,
 	};
-	console.log('sending back success reponse', response);
 	return response;
 };
