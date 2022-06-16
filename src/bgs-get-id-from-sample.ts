@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import SqlString from 'sqlstring';
-import { getConnection as getConnectionBgs } from './services/rds-bgs';
 import { getConnection } from './services/rds';
 import { encode } from './services/utils';
 
@@ -36,16 +35,6 @@ export default async (event): Promise<any> => {
 			WHERE sample = ${escape(encoded)}
 		`,
 	);
-	if (!dbResults.length) {
-		const mysqlBgs = await getConnectionBgs();
-		dbResults = await mysqlBgs.query(
-			`
-				SELECT id FROM bgs_simulation_samples
-				WHERE sample = ${escape(encoded)}
-			`,
-		);
-		await mysqlBgs.end();
-	}
 
 	if (dbResults && dbResults.length > 0) {
 		return {
