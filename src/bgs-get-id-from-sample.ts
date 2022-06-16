@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import SqlString from 'sqlstring';
 import { getConnection as getConnectionBgs } from './services/rds-bgs';
+import { getConnection } from './services/rds';
 import { encode } from './services/utils';
 
 // This example demonstrates a NodeJS 8.10 async handler[1], however of course you could use
@@ -26,15 +27,25 @@ export default async (event): Promise<any> => {
 	const encoded = encode(event.body);
 
 	const escape = SqlString.escape;
-	const mysqlBgs = await getConnectionBgs();
 
 	// Check if this sample already exists in db
-	const dbResults: any[] = await mysqlBgs.query(
+	const mysql = await getConnection();
+	let dbResults: any[] = await mysql.query(
 		`
+			SELECT id FROM bgs_simulation_samples
+			WHERE sample = ${escape(encoded)}
+		`,
+	);
+	if (!dbResults.length) {
+		const mysqlBgs = await getConnectionBgs();
+		dbResults = await mysqlBgs.query(
+			`
 				SELECT id FROM bgs_simulation_samples
 				WHERE sample = ${escape(encoded)}
 			`,
-	);
+		);
+		await mysqlBgs.end();
+	}
 
 	if (dbResults && dbResults.length > 0) {
 		return {
@@ -44,19 +55,14 @@ export default async (event): Promise<any> => {
 		};
 	}
 
-	const insertionResult: any = await mysqlBgs.query(
+	const insertionResult: any = await mysql.query(
 		`
-				INSERT INTO bgs_simulation_samples (sample)
-				VALUES (${escape(encoded)})
-			`,
+			INSERT INTO bgs_simulation_samples (sample)
+			VALUES (${escape(encoded)})
+		`,
 	);
-	await mysqlBgs.end();
-	// const insertedData = await mysqlBgs.query(
-	// 	`
-	// 		SELECT id FROM bgs_simulation_samples
-	// 		WHERE sample = '${encoded}'
-	// 	`,
-	// );
+	await mysql.end();
+	
 	const response = {
 		statusCode: 200,
 		body: JSON.stringify(insertionResult.insertId),
