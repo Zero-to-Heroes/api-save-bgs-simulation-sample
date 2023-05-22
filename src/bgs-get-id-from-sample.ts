@@ -29,7 +29,7 @@ export default async (event): Promise<any> => {
 
 	// Check if this sample already exists in db
 	const mysql = await getConnection();
-	let dbResults: any[] = await mysql.query(
+	const dbResults: any[] = await mysql.query(
 		`
 			SELECT id FROM bgs_simulation_samples
 			WHERE sample = ${escape(encoded)}
@@ -51,7 +51,7 @@ export default async (event): Promise<any> => {
 		`,
 	);
 	await mysql.end();
-	
+
 	const response = {
 		statusCode: 200,
 		body: JSON.stringify(insertionResult.insertId),
