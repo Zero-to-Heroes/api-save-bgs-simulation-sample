@@ -4,33 +4,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: API endpoint to get an id from a BGS simulation sample
 
-Globals:
-    Api:
-        # API Gateway regional endpoints
-        EndpointConfiguration: EDGE
-
 Resources:
-    GetIdFromBgsSimulationSampleFunction:
-        Type: AWS::Serverless::Function
-        Properties:
-            Handler: bgs-get-id-from-sample.default
-            Runtime: nodejs16.x
-            Timeout: 2
-            MemorySize: 128
-            CodeUri: ./dist/bgs-get-id-from-sample
-            Policies:
-                - AWSLambdaVPCAccessExecutionRole
-                - AmazonSESFullAccess
-                - SecretsManagerReadWrite
-                # - arn:aws:iam::478062583808:policy/CloudWatchPolicyForLambda # See https://stackoverflow.com/questions/51166504/disable-cloudwatch-to-monitor-logs-for-lambda-function
-            Tags:
-                LambdaName: api-save-bgs-simulation-sample
-            Events:
-                GetMatchStatsResource:
-                    Type: Api
-                    Properties:
-                        Path: /{proxy+}
-                        Method: any
     GetIdFromBgsSimulationSampleFunction2:
         Type: AWS::Serverless::Function
         Properties:
@@ -48,10 +22,3 @@ Resources:
             AutoPublishAlias: live
             FunctionUrlConfig:
                 AuthType: NONE
-
-Outputs:
-    GetIdFromBgsSimulationSampleApi:
-        Description: URL to get an id from a BGS simulation sample
-        Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
-        Export:
-            Name: GetIdFromBgsSimulationSampleApi
