@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
+import { getConnection } from '@firestone-hs/aws-lambda-utils';
 import SqlString from 'sqlstring';
-import { getConnection } from './services/rds';
 import { encode } from './services/utils';
 
 // This example demonstrates a NodeJS 8.10 async handler[1], however of course you could use
@@ -37,6 +37,7 @@ export default async (event): Promise<any> => {
 	);
 
 	if (dbResults && dbResults.length > 0) {
+		await mysql.end();
 		return {
 			statusCode: 200,
 			body: JSON.stringify(dbResults[0].id),
