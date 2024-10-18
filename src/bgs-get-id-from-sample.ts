@@ -23,10 +23,9 @@ export default async (event): Promise<any> => {
 		};
 		return response;
 	}
+
 	const encoded = encode(event.body);
-
 	const escape = SqlString.escape;
-
 	// Check if this sample already exists in db
 	const mysql = await getConnection();
 	const dbResults: any[] = await mysql.query(
